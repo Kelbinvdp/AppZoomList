@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monitor Auto-Renovable - Zoom Webinar</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+            position: relative;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            font-weight: 300;
+        }
+
+        .token-status {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: rgba(255,255,255,0.2);
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+        }
+
+        .token-status.valid {
+            background: #4CAF50;
+        }
+
+        .token-status.warning {
+            background: #FF9800;
+        }
+
+        .token-status.expired {
+            background: #f44336;
+        }
+
+        .config-section {
+            padding: 30px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #2196F3;
+            box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.1);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 20px;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(76, 175, 80, 0.3);
+        }
+
+        .btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-start {
+            background: linear-gradient(135deg, #9C27B0 0%, #673AB7 100%);
+            font-size: 18px;
+            padding: 18px 40px;
+        }
+
+        .btn-start:hover {
+            box-shadow: 0 5px 15px rgba(156, 39, 176, 0.3);
+        }
+
+        .status {
+            padding: 20px 30px;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .status.loading {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+
+        .status.success {
+            background: #e8f5e8;
+            color: #2e7d32;
+        }
+
+        .status.error {
+            background: #ffebee;
+            color: #c62828;
+        }
+
+        .participants-section {
+            padding: 30px;
+        }
+
+        .participants-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e1e5e9;
+        }
+
+        .participants-count {
+            background: linear-gradient(135deg, #9C27B0 0%, #673AB7 100%);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-weight: 600;
+        }
+
+        .participants-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .participant-card {
+            background: white;
+            border: 2px solid #e1e5e9;
+            border-radius: 12px;
+            padding: 20px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .participant-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            border-color: #2196F3;
+        }
+
+        .participant-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(135deg, #2196F3 0%, #21CBF3 100%);
+        }
+
+        .participant-name {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .participant-details {
+            color: #666;
+            line-height: 1.6;
+        }
+
+        .auto-section {
+            background: #e8f5e8;
+            border: 2px solid #4CAF50;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .auto-section h3 {
+            color: #2e7d32;
+            margin-bottom: 15px;
+        }
+
+        .countdown {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #1976d2;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4CAF50, #2196F3);
+            transition: width 1s ease;
+        }
+
+        @media (max-width: 768px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="token-status" id="tokenStatus">🔑 Token: No configurado</div>
+            <h1>🔄 Monitor Auto-Renovable</h1>
+            <p>Zoom Webinar - Sin Interrupciones</p>
+        </div>
+
+        <div class="config-section">
+            <h2>🔧 Configuración Inicial (Solo una vez)</h2>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="accountId">Account ID</label>
+                    <input type="text" id="accountId" placeholder="Tu Account ID de Zoom">
+                </div>
+                <div class="form-group">
+                    <label for="clientId">Client ID</label>
+                    <input type="text" id="clientId" placeholder="Tu Client ID">
+                </div>
+                <div class="form-group">
+                    <label for="clientSecret">Client Secret</label>
+                    <input type="password" id="clientSecret" placeholder="Tu Client Secret">
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="webinarId">ID del Webinar</label>
+                <input type="text" id="webinarId" placeholder="123456789">
+            </div>
+
+            <div style="text-align: center; margin-top: 30px;">
+                <button class="btn btn-start" onclick="startMonitoring()">
+                    🚀 Iniciar Monitoreo Automático
+                </button>
+            </div>
+
+            <div class="auto-section" id="autoSection" style="display: none;">
+                <h3>🤖 Monitoreo Automático Activo</h3>
+                <p>✅ Token se renueva automáticamente</p>
+                <p>✅ Participantes se actualizan cada 30 segundos</p>
+                <p>✅ Funciona sin interrupciones</p>
+                
+                <div class="countdown" id="countdown">Próxima renovación en: --</div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                
+                <button class="btn" onclick="stopMonitoring()" style="background: #f44336;">
+                    ⏹️ Detener Monitoreo
+                </button>
+            </div>
+        </div>
+
+        <div id="status" class="status" style="display: none;"></div>
+
+        <div class="participants-section" id="participantsSection" style="display: none;">
+            <div class="participants-header">
+                <h2>Participantes Conectados</h2>
+                <div class="participants-count" id="participantsCount">0 participantes</div>
+            </div>
+            <div style="font-size: 0.9rem; color: #666; margin-bottom: 20px;" id="lastUpdated"></div>
+            <div class="participants-grid" id="participantsGrid"></div>
+        </div>
+    </div>
+
+    <script>
+        let tokenData = null;
+        let monitoringInterval = null;
+        let tokenRenewalInterval = null;
+        let countdownInterval = null;
+        let currentParticipants = [];
+
+        function showStatus(message, type) {
+            const status = document.getElementById('status');
+            status.textContent = message;
+            status.className = `status ${type}`;
+            status.style.display = 'block';
+            
+            if (type === 'error') {
+                setTimeout(() => {
+                    status.style.display = 'none';
+                }, 5000);
+            }
+        }
+
+        function updateTokenStatus(status, timeLeft = null) {
+            const tokenStatus = document.getElementById('tokenStatus');
+            
+            switch(status) {
+                case 'valid':
+                    tokenStatus.textContent = `🟢 Token: Válido (${Math.floor(timeLeft/60)}min)`;
+                    tokenStatus.className = 'token-status valid';
+                    break;
+                case 'warning':
+                    tokenStatus.textContent = `🟡 Token: Renovando pronto (${Math.floor(timeLeft/60)}min)`;
+                    tokenStatus.className = 'token-status warning';
+                    break;
+                case 'expired':
+                    tokenStatus.textContent = '🔴 Token: Expirado';
+                    tokenStatus.className = 'token-status expired';
+                    break;
+                default:
+                    tokenStatus.textContent = '🔑 Token: No configurado';
+                    tokenStatus.className = 'token-status';
+            }
+        }
+
+        async function generateNewToken() {
+            const accountId = document.getElementById('accountId').value.trim();
+            const clientId = document.getElementById('clientId').value.trim();
+            const clientSecret = document.getElementById('clientSecret').value.trim();
+
+            if (!accountId || !clientId || !clientSecret) {
+                throw new Error('Faltan credenciales');
+            }
+
+            const credentials = btoa(`${clientId}:${clientSecret}`);
+            
+            const response = await fetch('https://zoom.us/oauth/token', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Basic ${credentials}`,
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                body: `grant_type=account_credentials&account_id=${accountId}`
+            });
+
+            if (!response.ok) {
+                throw new Error(`Error HTTP ${response.status}`);
+            }
+
+            const data = await response.json();
+            if (!data.access_token) {
+                throw new Error('No se recibió access token');
+            }
+
+            tokenData = {
+                token: data.access_token,
+                expiresAt: Date.now() + (data.expires_in * 1000),
+                expiresIn: data.expires_in
+            };
+
+            return tokenData;
+        }
+
+        async function getParticipants() {
+            const webinarId = document.getElementById('webinarId').value.trim();
+            
+            if (!tokenData || !tokenData.token) {
+                throw new Error('No hay token disponible');
+            }
+
+            try {
+                const response = await fetch(`https://api.zoom.us/v2/webinars/${webinarId}/participants`, {
+                    headers: {
+                        'Authorization': `Bearer ${tokenData.token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (response.status === 401) {
+                    // Token expirado, renovar
+                    console.log('Token expirado, renovando...');
+                    await generateNewToken();
+                    return getParticipants(); // Reintentar con nuevo token
+                }
+
+                if (!response.ok) {
+                    throw new Error(`Error HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const data = await response.json();
+                currentParticipants = data.participants || [];
+                
+                displayParticipants(currentParticipants);
+                updateLastUpdated();
+                
+                return currentParticipants;
+                
+            } catch (error) {
+                console.error('Error obteniendo participantes:', error);
+                throw error;
+            }
+        }
+
+        function displayParticipants(participants) {
+            const section = document.getElementById('participantsSection');
+            const grid = document.getElementById('participantsGrid');
+            const count = document.getElementById('participantsCount');
+
+            count.textContent = `${participants.length} participante${participants.length !== 1 ? 's' : ''}`;
+            
+            if (participants.length === 0) {
+                grid.innerHTML = '<div style="text-align: center; color: #666; font-style: italic; grid-column: 1/-1;">No hay participantes conectados en este momento</div>';
+            } else {
+                grid.innerHTML = participants.map(participant => `
+                    <div class="participant-card">
+                        <div class="participant-name">${participant.name || 'Sin nombre'}</div>
+                        <div class="participant-details">
+                            <div><strong>ID:</strong> ${participant.id}</div>
+                            <div><strong>Email:</strong> ${participant.user_email || 'No disponible'}</div>
+                            <div><strong>Hora de entrada:</strong> ${participant.join_time ? new Date(participant.join_time).toLocaleString('es-ES') : 'No disponible'}</div>
+                            <div><strong>Duración:</strong> ${calculateDuration(participant.join_time)}</div>
+                            <div><strong>Cliente:</strong> ${participant.client_type || 'No disponible'}</div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            section.style.display = 'block';
+        }
+
+        function calculateDuration(joinTime) {
+            if (!joinTime) return 'No disponible';
+            
+            const start = new Date(joinTime);
+            const now = new Date();
+            const diffMs = now - start;
+            
+            const hours = Math.floor(diffMs / (1000 * 60 * 60));
+            const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+            
+            if (hours > 0) {
+                return `${hours}h ${minutes}m`;
+            } else {
+                return `${minutes}m`;
+            }
+        }
+
+        function updateLastUpdated() {
+            const lastUpdated = document.getElementById('lastUpdated');
+            lastUpdated.textContent = `Última actualización: ${new Date().toLocaleString('es-ES')}`;
+        }
+
+        function startCountdown() {
+            if (countdownInterval) {
+                clearInterval(countdownInterval);
+            }
+
+            countdownInterval = setInterval(() => {
+                if (!tokenData) return;
+
+                const now = Date.now();
+                const timeLeft = Math.max(0, tokenData.expiresAt - now);
+                const totalTime = tokenData.expiresIn * 1000;
+                
+                const minutes = Math.floor(timeLeft / (1000 * 60));
+                const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
+                
+                document.getElementById('countdown').textContent = 
+                    `Próxima renovación en: ${minutes}:${seconds.toString().padStart(2, '0')}`;
+                
+                // Actualizar barra de progreso
+                const progress = ((totalTime - timeLeft) / totalTime) * 100;
+                document.getElementById('progressFill').style.width = `${progress}%`;
+                
+                // Actualizar estado del token
+                if (timeLeft < 300000) { // 5 minutos
+                    updateTokenStatus('warning', timeLeft / 1000);
+                } else {
+                    updateTokenStatus('valid', timeLeft / 1000);
+                }
+                
+                if (timeLeft <= 0) {
+                    generateNewToken().then(() => {
+                        console.log('Token renovado automáticamente');
+                        startCountdown();
+                    }).catch(error => {
+                        console.error('Error renovando token:', error);
+                        updateTokenStatus('expired');
+                    });
+                }
+            }, 1000);
+        }
+
+        async function startMonitoring() {
+            const accountId = document.getElementById('accountId').value.trim();
+            const clientId = document.getElementById('clientId').value.trim();
+            const clientSecret = document.getElementById('clientSecret').value.trim();
+            const webinarId = document.getElementById('webinarId').value.trim();
+
+            if (!accountId || !clientId || !clientSecret || !webinarId) {
+                showStatus('⚠️ Por favor completa todos los campos', 'error');
+                return;
+            }
+
+            try {
+                showStatus('🔄 Iniciando monitoreo automático...', 'loading');
+                
+                // Generar token inicial
+                await generateNewToken();
+                
+                // Obtener participantes iniciales
+                await getParticipants();
+                
+                // Configurar monitoreo automático
+                monitoringInterval = setInterval(async () => {
+                    try {
+                        await getParticipants();
+                        showStatus('✅ Monitoreo activo - Actualizando automáticamente', 'success');
+                    } catch (error) {
+                        console.error('Error en monitoreo:', error);
+                    }
+                }, 30000); // Cada 30 segundos
+                
+                // Iniciar countdown
+                startCountdown();
+                
+                // Mostrar sección de control
+                document.getElementById('autoSection').style.display = 'block';
+                
+                showStatus('✅ Monitoreo automático iniciado correctamente', 'success');
+                
+            } catch (error) {
+                console.error('Error:', error);
+                showStatus(`❌ Error: ${error.message}`, 'error');
+            }
+        }
+
+        function stopMonitoring() {
+            if (monitoringInterval) {
+                clearInterval(monitoringInterval);
+                monitoringInterval = null;
+            }
+            
+            if (countdownInterval) {
+                clearInterval(countdownInterval);
+                countdownInterval = null;
+            }
+            
+            document.getElementById('autoSection').style.display = 'none';
+            updateTokenStatus('expired');
+            showStatus('⏹️ Monitoreo detenido', 'error');
+        }
+
+        // Limpiar intervalos al cerrar la página
+        window.addEventListener('beforeunload', stopMonitoring);
+    </script>
+</body>
+</html>
